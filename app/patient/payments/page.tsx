@@ -18,7 +18,7 @@ type PaymentItem = {
   title: string;
   subtitle: string;
   amount: number;
-  purpose: "appointment" | "diagnostic" | "other";
+  purpose: "appointment" | "diagnostic" | "consultation" | "other";
 };
 
 type PaymentRecord = {
@@ -29,6 +29,7 @@ type PaymentRecord = {
   method: string;
   status: string;
   paidAt: string;
+  purpose: PaymentItem["purpose"];
 };
 
 const methods = [
@@ -103,14 +104,17 @@ export default function PaymentsPage() {
 
       if (
         parsed.purpose === "appointment" ||
-        parsed.purpose === "diagnostic"
+        parsed.purpose === "diagnostic" ||
+        parsed.purpose === "consultation"
       ) {
         purpose = parsed.purpose;
       }
 
       setPaymentItem({
-        title: parsed.title || "AVSH Hospital Service",
-        subtitle: parsed.subtitle || "AVSH Hospital Service",
+        title:
+          parsed.title || "AVSH Hospital Service",
+        subtitle:
+          parsed.subtitle || "AVSH Hospital Service",
         amount: Number(parsed.amount || 0),
         purpose,
       });
@@ -147,6 +151,7 @@ export default function PaymentsPage() {
       method: selectedMethod,
       status: "Paid",
       paidAt: new Date().toISOString(),
+      purpose: paymentItem.purpose,
     };
 
     localStorage.setItem(
@@ -166,7 +171,10 @@ export default function PaymentsPage() {
 
     localStorage.setItem(
       "avshPayments",
-      JSON.stringify([payment, ...existingPayments])
+      JSON.stringify([
+        payment,
+        ...existingPayments,
+      ])
     );
 
     localStorage.removeItem("avshPendingPayment");
@@ -183,7 +191,16 @@ export default function PaymentsPage() {
     }
 
     if (paymentItem.purpose === "diagnostic") {
-      router.push("/patient/diagnostics/confirmation");
+      router.push(
+        "/patient/diagnostics/confirmation"
+      );
+      return;
+    }
+
+    if (paymentItem.purpose === "consultation") {
+      router.push(
+        "/patient/consultation/confirmation"
+      );
       return;
     }
 
@@ -212,7 +229,9 @@ export default function PaymentsPage() {
       <header className="border-b border-[#e5e1d7] bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <button
-            onClick={() => router.push("/patient/dashboard")}
+            onClick={() =>
+              router.push("/patient/dashboard")
+            }
             className="flex items-center gap-3"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#071a3d]">
@@ -223,6 +242,7 @@ export default function PaymentsPage() {
 
             <div className="text-left">
               <p className="font-bold">AVSH</p>
+
               <p className="text-xs text-[#667085]">
                 Secure Payments
               </p>
@@ -231,7 +251,7 @@ export default function PaymentsPage() {
 
           <div className="hidden items-center gap-2 text-sm text-[#667085] sm:flex">
             <Lock size={15} />
-            Secure demonstration payment
+            Secure payment
           </div>
         </div>
       </header>
@@ -315,7 +335,9 @@ export default function PaymentsPage() {
 
               <button
                 onClick={() =>
-                  router.push("/patient/payments/history")
+                  router.push(
+                    "/patient/payments/history"
+                  )
                 }
                 className="flex-1 rounded-xl border border-[#e5e1d7] bg-white px-5 py-3.5 font-semibold text-[#071a3d] hover:bg-[#f8f7f3]"
               >
@@ -347,8 +369,7 @@ export default function PaymentsPage() {
               </h1>
 
               <p className="mt-3 text-[#667085]">
-                Select a payment method to continue your
-                demonstration booking.
+                Select a payment method to continue.
               </p>
 
               <div className="mt-8 space-y-3">
@@ -439,7 +460,8 @@ export default function PaymentsPage() {
               <button
                 onClick={handlePayment}
                 disabled={
-                  processing || paymentItem.amount <= 0
+                  processing ||
+                  paymentItem.amount <= 0
                 }
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#071a3d] px-5 py-4 font-semibold text-white transition hover:bg-[#102a56] disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -466,9 +488,9 @@ export default function PaymentsPage() {
                 <ShieldIcon />
 
                 <p className="text-xs leading-5 text-[#667085]">
-                  This is a simulated payment environment for
-                  the AVSH university project. No real money is
-                  charged.
+                  This payment flow is simulated for
+                  the AVSH university project. No real
+                  money is charged.
                 </p>
               </div>
             </aside>
@@ -482,7 +504,10 @@ export default function PaymentsPage() {
 function ShieldIcon() {
   return (
     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white">
-      <Lock size={15} className="text-[#071a3d]" />
+      <Lock
+        size={15}
+        className="text-[#071a3d]"
+      />
     </div>
   );
 }
